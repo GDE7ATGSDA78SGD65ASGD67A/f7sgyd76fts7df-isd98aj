@@ -110,26 +110,25 @@ end));
 -----------------------------------------------------------------------------------------------------------------
 local Flux = loadstring(game:HttpGet"https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/fluxlib.txt")()
 
-local win = Flux:Window("Stay Mad 🤬", "Update: 1.8.2", Color3.fromRGB(255, 110, 48), Enum.KeyCode.LeftControl)
+local win = Flux:Window("Stay Mad 🤬", "Update: 1.8.3", Color3.fromRGB(255, 110, 48), Enum.KeyCode.LeftControl)
 local tab = win:Tab("Boom Kid's Features", "http://www.roblox.com/asset/?id=6023426915")
 tab:Button("Boom Kid's AutoFarm", "Plays for you killing players while YOU are afk", function()
     Flux:Notification("AutoFarm enabled note: This is Boom Kid's Auto mine is in my section", "Alright")
-    
 game:GetService("RunService").Stepped:Connect(function()
     local lp = game.Players.LocalPlayer
     local plr1 = lp.Character
     while game.Workspace.GameMap and lp.PlayerGui.ScreenGui.UI.Target.Visible do
     local Target = lp.PlayerGui.ScreenGui:WaitForChild("UI"):WaitForChild("Target"):WaitForChild("TargetText").Text
     local plr2 = game.Workspace:WaitForChild(Target)
-    game.Workspace.Gravity = 4
+    game.Workspace.Gravity = 0
     game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(15,false)
     game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(16,false)
-    game:GetService("TweenService"):Create(plr1:WaitForChild("HumanoidRootPart"),TweenInfo.new(5.28),{CFrame= plr2:WaitForChild("HumanoidRootPart").CFrame}):Play()
+    game:GetService("TweenService"):Create(plr1:WaitForChild("HumanoidRootPart"),TweenInfo.new(5.29),{CFrame= plr2:WaitForChild("HumanoidRootPart").CFrame}):Play()
         local noclip = true 
-    local meme = game.Players.LocalPlayer.Character 
-    while wait() do 
+    char = game.Players.LocalPlayer.Character 
+    while true do 
       if noclip == true then 
-        for _,v in pairs(meme:children()) do 
+        for _,v in pairs(char:children()) do 
           pcall(function() if v.className == "Part" then v.CanCollide = false elseif v.ClassName == "Model" then
              v.Head.CanCollide = false end end) 
         end 
