@@ -114,6 +114,7 @@ local win = Flux:Window("Stay Mad 🤬", "Version 1.7.3", Color3.fromRGB(255, 11
 local tab = win:Tab("Boom Kid's Features", "http://www.roblox.com/asset/?id=6023426915")
 tab:Button("Boom Kid's AutoFarm", "Plays for you killing players while YOU are afk", function()
     Flux:Notification("AutoFarm enabled note: This is Boom Kid's Auto mine is in my section", "Alright")
+    
 game:GetService("RunService").Stepped:Connect(function()
     local lp = game.Players.LocalPlayer
     local plr1 = lp.Character
@@ -123,7 +124,7 @@ game:GetService("RunService").Stepped:Connect(function()
     game.Workspace.Gravity = 0
     game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(15,false)
     game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(16,false)
-    game:GetService("TweenService"):Create(plr1:WaitForChild("HumanoidRootPart"),TweenInfo.new(5.35),{CFrame= plr2:WaitForChild("HumanoidRootPart").CFrame}):Play()
+    game:GetService("TweenService"):Create(plr1:WaitForChild("HumanoidRootPart"),TweenInfo.new(5.45),{CFrame= plr2:WaitForChild("HumanoidRootPart").CFrame}):Play()
         local noclip = true 
     char = game.Players.LocalPlayer.Character 
     while true do 
