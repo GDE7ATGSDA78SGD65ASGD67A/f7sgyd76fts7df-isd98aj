@@ -110,7 +110,7 @@ end));
 -----------------------------------------------------------------------------------------------------------------
 local Flux = loadstring(game:HttpGet"https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/fluxlib.txt")()
 
-local win = Flux:Window("Stay Mad 🤬", "Version 1.7.1", Color3.fromRGB(255, 110, 48), Enum.KeyCode.LeftControl)
+local win = Flux:Window("Stay Mad 🤬", "Version 1.7.3", Color3.fromRGB(255, 110, 48), Enum.KeyCode.LeftControl)
 local tab = win:Tab("Boom Kid's Features", "http://www.roblox.com/asset/?id=6023426915")
 tab:Button("Boom Kid's AutoFarm", "Plays for you killing players while YOU are afk", function()
     Flux:Notification("AutoFarm enabled note: This is Boom Kid's Auto mine is in my section", "Alright")
