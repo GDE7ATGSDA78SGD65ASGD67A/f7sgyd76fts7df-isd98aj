@@ -117,6 +117,128 @@ local oldGameIndex; oldGameIndex = hookmetamethod(game, "__index", newcclosure(f
 
     return oldGameIndex(...);
 end));
+local script = game:GetService'Players'.LocalPlayer.PlayerScripts.reeeee;
+local tablefind = table.find;
+local gc = getgc();
+for I, Function in next, gc do
+    if type(Function) == 'function' and islclosure(Function) and getfenv(Function).script == script then
+        local constants = getconstants(Function);
+        if tablefind(constants, 'Health') then
+            local BodyMoverIndex = tablefind(constants, 'BodyMover');
+            if BodyMoverIndex then
+                setconstant(Function, BodyMoverIndex, 'game');
+                break;
+            end;
+        end;
+    end;
+end;
+
+if AutoFarm == true then
+ 
+       game:GetService("RunService").Stepped:Connect(function()
+    local lp = game.Players.LocalPlayer
+    local plr1 = lp.Character
+    while game.Workspace.GameMap and lp.PlayerGui.ScreenGui.UI.Target.Visible do
+    local Target = lp.PlayerGui.ScreenGui:WaitForChild("UI"):WaitForChild("Target"):WaitForChild("TargetText").Text
+    local plr2 = game.Workspace:WaitForChild(Target)
+    game.Workspace.Gravity = 20
+    game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(15,false)
+    game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(16,false)
+    game:GetService("TweenService"):Create(plr1:WaitForChild("HumanoidRootPart"),TweenInfo.new(5.5),{CFrame= plr2:WaitForChild("HumanoidRootPart").CFrame}):Play()
+            local noclip = true 
+    char = game.Players.LocalPlayer.Character 
+    while true do 
+      if noclip == true then 
+        for _,v in pairs(char:children()) do 
+          pcall(function() if v.className == "Part" then v.CanCollide = false elseif v.ClassName == "Model" then
+             v.Head.CanCollide = false end end) 
+        end 
+      end 
+    game:service("RunService").Stepped:wait() 
+    end
+end
+end)
+
+spawn(function()
+    local function randompart()
+        local hits = {
+            0,
+            1,
+            2,
+            -1,
+            -2,
+        }
+        return hits[math.random(1, #hits)]
+    end
+    while wait() do
+        pcall(function()
+            if game.Players.LocalPlayer.Backpack:FindFirstChild("Knife") then
+                for i, v in pairs(game.Players:GetPlayers()) do
+                    if v.Name == game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.TargetText.Text then
+                        if v.Name ~= game.Players.LocalPlayer.Name then
+                            game.Players.LocalPlayer.Character.Humanoid:EquipTool(Game.Players.LocalPlayer.Backpack.Knife)
+                            wait(.3)
+                            local Target = game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.TargetText.Text
+                            local x = game.Workspace[Target].HumanoidRootPart.Position.X + randompart()
+                            local y = game.Workspace[Target].HumanoidRootPart.Position.Y + randompart()
+                            local z = game.Workspace[Target].HumanoidRootPart.Position.Z + randompart()
+                            local args = {
+                                [1] = Vector3.new(x, y, z),
+                                [2] = 0,
+                                [3] = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                            }
+                            game:GetService("ReplicatedStorage").Remotes.ThrowKnife:FireServer(unpack(args))
+                            wait(.1)
+                            game:GetService("Players").localPlayer.Character:FindFirstChildOfClass("Humanoid"):UnequipTools()
+                            wait(.6)
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+spawn(function()
+    game:GetService('RunService').RenderStepped:connect(function()
+for i,v in pairs(game:GetService('Players'):GetPlayers()) do
+    if v.Name ~= game.Players.LocalPlayer.Name then
+game.Workspace[v.Name].HumanoidRootPart.Size = Vector3.new(8,8,8)
+game.Workspace[v.Name].HumanoidRootPart.Transparency = 1
+game.Workspace[v.Name].HumanoidRootPart.BrickColor = BrickColor.new("Really red")
+game.Workspace[v.Name].HumanoidRootPart.Material = "Neon"
+game.Workspace[v.Name].HumanoidRootPart.CanCollide = false
+wait()
+end
+end
+end)
+end)
+
+ -- Made by JackMcJagger15
+
+power = 300 -- change this to make it more or less powerful
+
+game:GetService('RunService').Stepped:connect(function()
+game.Players.LocalPlayer.Character.Head.CanCollide = false
+game.Players.LocalPlayer.Character.Torso.CanCollide = false
+game.Players.LocalPlayer.Character["Left Leg"].CanCollide = false
+game.Players.LocalPlayer.Character["Right Leg"].CanCollide = false
+end)
+
+wait(.1)
+local bambam = Instance.new("BodyThrust")
+bambam.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
+bambam.Force = Vector3.new(power,0,power)
+bambam.Location = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
+
+spawn(function()
+    while wait(300) do
+        pcall(function()
+            game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+        end)
+    end
+end)
+end
 
 local UILibrary = loadstring(game:HttpGet("https://pastebin.com/raw/V1ca2q9s"))()
 
@@ -327,111 +449,4 @@ while true do
     end 
   end 
 game:service("RunService").Stepped:wait() 
-end
-
-if AutoFarm == true then
- 
-       game:GetService("RunService").Stepped:Connect(function()
-    local lp = game.Players.LocalPlayer
-    local plr1 = lp.Character
-    while game.Workspace.GameMap and lp.PlayerGui.ScreenGui.UI.Target.Visible do
-    local Target = lp.PlayerGui.ScreenGui:WaitForChild("UI"):WaitForChild("Target"):WaitForChild("TargetText").Text
-    local plr2 = game.Workspace:WaitForChild(Target)
-    game.Workspace.Gravity = 20
-    game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(15,false)
-    game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(16,false)
-    game:GetService("TweenService"):Create(plr1:WaitForChild("HumanoidRootPart"),TweenInfo.new(5.5),{CFrame= plr2:WaitForChild("HumanoidRootPart").CFrame}):Play()
-            local noclip = true 
-    char = game.Players.LocalPlayer.Character 
-    while true do 
-      if noclip == true then 
-        for _,v in pairs(char:children()) do 
-          pcall(function() if v.className == "Part" then v.CanCollide = false elseif v.ClassName == "Model" then
-             v.Head.CanCollide = false end end) 
-        end 
-      end 
-    game:service("RunService").Stepped:wait() 
-    end
-end
-end)
-
-spawn(function()
-    local function randompart()
-        local hits = {
-            0,
-            1,
-            2,
-            -1,
-            -2,
-        }
-        return hits[math.random(1, #hits)]
-    end
-    while wait() do
-        pcall(function()
-            if game.Players.LocalPlayer.Backpack:FindFirstChild("Knife") then
-                for i, v in pairs(game.Players:GetPlayers()) do
-                    if v.Name == game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.TargetText.Text then
-                        if v.Name ~= game.Players.LocalPlayer.Name then
-                            game.Players.LocalPlayer.Character.Humanoid:EquipTool(Game.Players.LocalPlayer.Backpack.Knife)
-                            wait(.3)
-                            local Target = game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.TargetText.Text
-                            local x = game.Workspace[Target].HumanoidRootPart.Position.X + randompart()
-                            local y = game.Workspace[Target].HumanoidRootPart.Position.Y + randompart()
-                            local z = game.Workspace[Target].HumanoidRootPart.Position.Z + randompart()
-                            local args = {
-                                [1] = Vector3.new(x, y, z),
-                                [2] = 0,
-                                [3] = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)
-                            }
-                            game:GetService("ReplicatedStorage").Remotes.ThrowKnife:FireServer(unpack(args))
-                            wait(.1)
-                            game:GetService("Players").localPlayer.Character:FindFirstChildOfClass("Humanoid"):UnequipTools()
-                            wait(.6)
-                        end
-                    end
-                end
-            end
-        end)
-    end
-end)
-
-spawn(function()
-    game:GetService('RunService').RenderStepped:connect(function()
-for i,v in pairs(game:GetService('Players'):GetPlayers()) do
-    if v.Name ~= game.Players.LocalPlayer.Name then
-game.Workspace[v.Name].HumanoidRootPart.Size = Vector3.new(8,8,8)
-game.Workspace[v.Name].HumanoidRootPart.Transparency = 1
-game.Workspace[v.Name].HumanoidRootPart.BrickColor = BrickColor.new("Really red")
-game.Workspace[v.Name].HumanoidRootPart.Material = "Neon"
-game.Workspace[v.Name].HumanoidRootPart.CanCollide = false
-wait()
-end
-end
-end)
-end)
-
- -- Made by JackMcJagger15
-
-power = 300 -- change this to make it more or less powerful
-
-game:GetService('RunService').Stepped:connect(function()
-game.Players.LocalPlayer.Character.Head.CanCollide = false
-game.Players.LocalPlayer.Character.Torso.CanCollide = false
-game.Players.LocalPlayer.Character["Left Leg"].CanCollide = false
-game.Players.LocalPlayer.Character["Right Leg"].CanCollide = false
-end)
-
-wait(.1)
-local bambam = Instance.new("BodyThrust")
-bambam.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
-bambam.Force = Vector3.new(power,0,power)
-bambam.Location = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
-
-spawn(function()
-    while wait(300) do
-        pcall(function()
-            game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
-        end)
-    end
-end)
 end
