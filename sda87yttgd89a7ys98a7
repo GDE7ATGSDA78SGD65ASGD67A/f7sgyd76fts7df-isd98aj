@@ -1,3 +1,4 @@
+wait(9)
 getgenv().AutoFarm = true
 
 local CoreGui = game.CoreGui
