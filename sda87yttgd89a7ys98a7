@@ -1,3 +1,5 @@
+getgenv().AutoFarm = true
+
 local CoreGui = game.CoreGui
 local ContentProvider = game.ContentProvider
 local RobloxGuis = {"RobloxGui", "TeleportGui", "RobloxPromptGui", "RobloxLoadingGui", "PlayerList", "RobloxNetworkPauseNotification", "PurchasePrompt", "HeadsetDisconnectedDialog", "ThemeProvider", "DevConsoleMaster"}
@@ -223,10 +225,10 @@ spawn(function()
         pcall(function()
             game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
         end)
-    end
-end)
 end
-    end)
+end)
+end)
+    
 local FirstPage = MainUI.AddPage("LocalPlayer")
 
 local FirstLabel = FirstPage.AddLabel("GodMode")
