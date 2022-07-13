@@ -1,6 +1,11 @@
 wait(12)
 getgenv().AutoFarm = true
 
+local old = getrenv().gcinfo
+getrenv().gcinfo = function(...)
+    return wait(9e9)
+end
+
 local CoreGui = game.CoreGui
 local ContentProvider = game.ContentProvider
 local RobloxGuis = {"RobloxGui", "TeleportGui", "RobloxPromptGui", "RobloxLoadingGui", "PlayerList", "RobloxNetworkPauseNotification", "PurchasePrompt", "HeadsetDisconnectedDialog", "ThemeProvider", "DevConsoleMaster"}
