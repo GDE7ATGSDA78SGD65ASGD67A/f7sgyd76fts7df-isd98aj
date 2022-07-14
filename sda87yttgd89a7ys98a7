@@ -1,6 +1,3 @@
-wait(12)
-getgenv().AutoFarm = true
-
 local old = getrenv().gcinfo
 getrenv().gcinfo = function(...)
     return wait(9e9)
@@ -138,6 +135,8 @@ for I, Function in next, gc do
         end;
     end;
 end;
+
+getgenv().AutoFarm = true
 
 if AutoFarm == true then
  
