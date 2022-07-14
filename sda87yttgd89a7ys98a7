@@ -135,9 +135,7 @@ for I, Function in next, gc do
         end;
     end;
 end;
-
-getgenv().AutoFarm = true
-
+getfenv().AutoFarm == no
 if AutoFarm == true then
  
        game:GetService("RunService").Stepped:Connect(function()
