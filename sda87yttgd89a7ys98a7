@@ -85,52 +85,450 @@ local DONE = false;
 
 end)();
 print("Bypassed")
+local Lib = loadstring(game:HttpGet"https://gitlab.com/te4224/Scripts/-/raw/main/Pulse/UILIB/V1/main.lua")();
+local Gui = Lib.new("Quit Camping", UDim2.fromOffset(400, 450));
+local Tab = Gui:NewTab("Main");
+local Label = Tab:NewLabel("Farm");
+local Button = Tab:NewButton("AutoFarm", function() --HBE
+local mt = getrawmetatable(game);
+make_writeable(mt);
+local old_index = mt.__index;
 
-local baseHitboxSize = Vector3.new(2, 2, 1);
-local baseTransparency = 1;
---[spoofer]
-local oldGameIndex; oldGameIndex = hookmetamethod(game, "__index", newcclosure(function(...)
-    local Self, Key = ...;
+mt.__index = function(a, b)
+if tostring(a) == "HumanoidRootPart" then
+if tostring(b) == "Size" then
+return Vector3.new(2, 2, 1);
+end
+end
+return old_index(a, b);
+end
 
-    if typeof(Self) == "Instance" and type(Key) == "string" and tostring(Self) == "HumanoidRootPart" and (Key == "Size" or Key == "Transparency") then
-        if Key == "Size" then
-            return baseHitboxSize;
+
+if shared.ShushHighlight then shared.ShushHighlight.stop();end;
+
+local Connection = {};
+Connection.__index = Connection;
+Connection.__tostring = function(self)
+	return self.Name;
+end;
+
+Connection.new = function(Event, Func, Once)
+	return setmetatable({Name = Event.Name .. ".Connection", Event = Event, Func = Func, Once = Once}, Connection);
+end;
+
+Connection.Disconnect = function(self)
+	table.remove(self.Event._connections, table.find(self.Event._connections, self));
+end;
+
+
+local Event = {};
+Event.__index = Event;
+Event.__tostring = function(self)
+	return self.Name;
+end;
+
+Event.new = function(Name)
+	return setmetatable({Name = Name or "Event", _connections={}, _waits={}}, Event);
+end;
+
+Event.Connect = function(self, Func)
+	local connection = Connection.new(self, Func);
+	table.insert(self._connections, connection);
+	return connection;
+end;
+Event.Fire = function(self, ...)
+	local Args = {...};
+	task.spawn(function()
+		for I, Con in next, self._connections do
+			Con.Func(unpack(Args));
+		end;
+	end);
+end;
+
+
+local Target;
+
+local PlayerService = game:GetService("Players");
+local LP = PlayerService.LocalPlayer;
+
+local FFC = game.FindFirstChild;
+
+local TargetObject = LP:WaitForChild("PlayerGui").ScreenGui.UI.Target;
+local TargetText = TargetObject.TargetText;
+
+do
+    local T = TargetText.Text;
+    local V = TargetText.Visible;
+    local V2 = TargetObject.Visible;
+
+    if V and V2 then
+        if T and #T > 1 then
+            Target = FFC(PlayerService, T);
         end;
-        return baseTransparency;
+    end;
+end;
+
+local INSTChanged = Event.new("InstChanged");
+local TARGETChanged = Event.new("TargetChanged");
+local HITBOXChanged = Event.new("HitboxChanged");
+local TARGETHITBOXChanged = Event.new("TargetHitboxChanged");
+
+local SettingsProxy = {Target = true};
+
+local INSTProxy = {
+    FillColor = Color3.new(0, 1, 0),
+    FillTransparency = 0.5,
+
+    OutlineColor = Color3.new(1, 1, 1),
+    OutlineTransparency = 0;
+};
+local TARGETProxy = {
+    FillColor = Color3.new(1, 0, 0),
+    FillTransparency = 0.5,
+
+    OutlineColor = Color3.new(1, 1, 1),
+    OutlineTransparency = 0;
+};
+local HITBOXProxy = {
+    Size = Vector3.new(2,2,1),
+    Transparency = 1
+};
+local TARGETHITBOXProxy = {
+    Size = Vector3.new(2,2,1),
+    Transparency = 1
+};
+
+local Settings = setmetatable({}, {__index = SettingsProxy, __newindex = function(self, key, value)
+    if key == "Target" then 
+        for i,v in next, TARGETProxy do
+            TARGETChanged:Fire(i,v);
+        end;
+    end;
+    
+    SettingsProxy[key] = value;
+end});
+Settings.INST = setmetatable({}, {__index = INSTProxy, __newindex = function(self, Key, Value)
+    if INSTProxy[Key] then
+        INSTChanged:Fire(Key, Value);
+        INSTProxy[Key] = Value;
+        
+        return;
+    end;
+    
+    return error(tostring(Key), " is not a valid key");
+end});
+Settings.TARGET = setmetatable({}, {__index = TARGETProxy, __newindex = function(self, Key, Value)
+    if TARGETProxy[Key] then
+        TARGETChanged:Fire(Key, Value);
+        TARGETProxy[Key] = Value;
+        
+        return;
+    end;
+    
+    return error(tostring(Key), " is not a valid key");
+end});
+Settings.HITBOX = setmetatable({}, {__index = HITBOXProxy, __newindex = function(self, Key, Value)
+    if HITBOXProxy[Key] then
+        HITBOXChanged:Fire(Key, Value);
+        HITBOXProxy[Key] = Value;
+        
+        return;
+    end;
+    
+    return error(tostring(Key), " is not a valid key");
+end});
+Settings.TARGETHITBOX = setmetatable({}, {__index = TARGETHITBOXProxy, __newindex = function(self, Key, Value)
+    if TARGETHITBOXProxy[Key] then
+        TARGETHITBOXChanged:Fire(Key, Value);
+        TARGETHITBOXProxy[Key] = Value;
+        
+        return;
+    end;
+    
+    return error(tostring(Key), " is not a valid key");
+end});
+
+local Highlight = {
+    Active = true,
+    Connections = {},
+    Settings = Settings
+};
+Highlight.__index = Highlight;
+
+Highlight.new = function(Character, Player)
+    local cache = {};
+    
+    local Inst = Instance.new("Highlight");
+    Inst.Adornee = Character;
+    Inst.Parent = Character;
+    
+    if Settings.Target and Target and Player == Target then
+        for k,v in next, TARGETProxy do
+            Inst[k] = v;
+            cache[k] = v;
+        end;
+    else
+        for k, v in next, INSTProxy do
+            Inst[k] = v;
+            cache[k] = v;
+        end;
+    end;
+    
+    local SettingsCon; SettingsCon = INSTChanged:Connect(function(k,v)
+        if cache[k] == v then return;end;
+        if Settings.Target and Target and Target and Player == Target then return;end;
+        Inst[k] = v;
+        -- cache[k] = v;
+    end);
+    local TargetCon; TargetCon = TARGETChanged:Connect(function(k,v)
+        if cache[k] == v then return;end;
+        if not (Settings.Target and Target and Player == Target) then return;end;
+        Inst[k] = v;
+        -- cache[k] = v;
+    end);
+    Inst.Changed:Connect(function(P)
+        cache[P] = Inst[P];
+    end);
+
+    
+    local highlight = setmetatable({
+        Active = true,
+        Inst = Inst,
+        Character = Character,
+        SettingsCon = SettingsCon,
+        TargetCon = TargetCon;
+    }, Highlight);
+    
+    return highlight;
+end;
+
+Highlight.Destroy = function(self)
+    if not self.Active then return;end;
+    self.Active = false;
+    self.SettingsCon:Disconnect();
+    self.TargetCon:Disconnect();
+    self.Inst:Destroy();
+end;
+
+local Extender = {};
+Extender.__index = Extender;
+
+Extender.new = function(Character, Player)
+    local HRP = Character:FindFirstChild("HumanoidRootPart");
+    
+    local HitboxCon = HITBOXChanged:Connect(function(k,v)
+        if not HRP then return;end;
+        if Settings.Target and Target and Target and Player == Target then return;end;
+        HRP[k] = v;
+    end);
+    local TargetHitboxCon = TARGETHITBOXChanged:Connect(function(k,v)
+        if not HRP then return;end;
+        if not (Settings.Target and Target and Target and Player == Target) then return;end;
+        HRP[k] = v;
+    end);
+
+    local extender = setmetatable({
+        Active = true,
+        HitboxCon = HitboxCon,
+        TargetHitboxCon = TargetHitboxCon,
+        HRP = HRP,
+    }, Extender);
+
+    task.spawn(function()
+        if not HRP then repeat task.wait();HRP = Character:FindFirstChild("HumanoidRootPart");until HRP;end;
+        extender.HRP = HRP;
+
+        if Settings.Target and Target and Player == Target then
+            for k,v in next, TARGETHITBOXProxy do
+                HRP[k] = v;
+            end;
+        else
+            for k, v in next, HITBOXProxy do
+                HRP[k] = v;
+            end;
+        end;
+    end);
+
+    return extender;
+end;
+Extender.Destroy = function(self)
+    if not self.Active then return;end;
+    self.Active = false;
+    self.HitboxCon:Disconnect();
+    self.TargetHitboxCon:Disconnect();
+end;
+
+local function GetCharacter(Player)
+    return workspace:FindFirstChild(Player.Name);
+end;
+
+local PlayerObject = {};
+PlayerObject.__index = PlayerObject;
+
+PlayerObject.new = function(Player)
+    if typeof(Player) ~= "Instance" or Player == LP then return;end;
+    local playerobject = setmetatable({
+        Active = true,
+        Player = Player,
+        Character = GetCharacter(Player) or Player.CharacterAdded:Wait();
+    }, PlayerObject);
+
+    task.spawn(function()
+        playerobject.Highlight = Highlight.new(playerobject.Character, Player);
+    end);
+    task.spawn(function()
+        playerobject.Extender = Extender.new(playerobject.Character, Player);
+    end);
+
+    local con = Player.CharacterAdded:Connect(function(Character)
+        task.spawn(function()
+            if playerobject.Highlight then playerobject.Highlight:Destroy();end;
+            playerobject.Highlight = Highlight.new(Character, Player);
+        end);
+        task.spawn(function()
+            if playerobject.Extender then playerobject.Extender:Destroy();end;
+            playerobject.Extender = Extender.new(Character, Player);
+        end);
+    end);
+    playerobject.CharacterAddedCon = con;
+
+    PlayerObject[Player] = playerobject;
+
+    return playerobject;
+end;
+
+PlayerObject.Destroy = function(self)
+    if not self.Active then return;end;
+    
+    self.Active = false;
+    if self.Highlight then self.Highlight:Destroy();end;
+    if self.Extender then self.Extender:Destroy();end;
+    self.CharacterAddedCon:Disconnect();
+    
+end;
+
+Highlight.HandlePlayers = function()
+    for I, Player in next, PlayerService:GetPlayers() do
+        PlayerObject.new(Player);
     end;
 
-    return oldGameIndex(...);
-end));
-getfenv().AutoFarm = true
-if AutoFarm == true then
-local UILibrary = loadstring(game:HttpGet("https://pastebin.com/raw/V1ca2q9s"))()
+    table.insert(Highlight.Connections, PlayerService.PlayerAdded:Connect(PlayerObject.new));
+    table.insert(Highlight.Connections, PlayerService.PlayerRemoving:Connect(function(Player)
+        if PlayerObject[Player] then
+            PlayerObject[Player]:Destroy();
+        end;
+    end));
+end;
+Highlight.stop = function()
+    if not Highlight.Active then return;end;
+    
+    Highlight.Active = false;
+    for I, V in next, PlayerObject do
+        if typeof(I) == "Instance" then
+            V:Destroy();
+        end;
+    end;
+    
+    for i,v in next, Highlight.Connections do
+        v:Disconnect();
+    end;
+end;
 
-local MainUI = UILibrary.Load("Kings Script 👑")
-local FirstPage = MainUI.AddPage("AutoFarm")
-local FirstLabel = FirstPage.AddLabel("AutoFarm RE-VAMP")
-local FirstButton = FirstPage.AddButton("AutoFarm ", function()
-       game:GetService("RunService").Stepped:Connect(function()
-    local lp = game.Players.LocalPlayer
-    local plr1 = lp.Character
-    while game.Workspace.GameMap and lp.PlayerGui.ScreenGui.UI.Target.Visible do
-    local Target = lp.PlayerGui.ScreenGui:WaitForChild("UI"):WaitForChild("Target"):WaitForChild("TargetText").Text
-    local plr2 = game.Workspace:WaitForChild(Target)
-    game.Workspace.Gravity = 20
-    game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(15,false)
-    game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(16,false)
-    game:GetService("TweenService"):Create(plr1:WaitForChild("HumanoidRootPart"),TweenInfo.new(5.5),{CFrame= plr2:WaitForChild("HumanoidRootPart").CFrame}):Play()
-            local noclip = true 
-    char = game.Players.LocalPlayer.Character 
-    while true do 
-      if noclip == true then 
-        for _,v in pairs(char:children()) do 
-          pcall(function() if v.className == "Part" then v.CanCollide = false elseif v.ClassName == "Model" then
-             v.Head.CanCollide = false end end) 
-        end 
-      end 
-    game:service("RunService").Stepped:wait() 
-    end
+local ReplicatedStorage = game:GetService("ReplicatedStorage");
+local Remotes = ReplicatedStorage.Remotes;
+local HideTarget = Remotes.HideTarget;
+local UpdateTarget = Remotes.UpdateTarget;
+
+table.insert(Highlight.Connections, HideTarget.OnClientEvent:Connect(function()
+    Target = nil;
+
+    for k,v in next, INSTProxy do
+        INSTChanged:Fire(k,v);
+    end;
+end));
+table.insert(Highlight.Connections, UpdateTarget.OnClientEvent:Connect(function(T)
+    Target = T;
+
+    local p = PlayerObject[Target]
+    local h = p and p.Highlight;
+    
+    if h then
+        for k,v in next, TARGETProxy do
+            h.Inst[k] = v;
+        end;
+    end;
+
+    local e = p and p.Extender;
+    if e then
+        for k,v in next, TARGETHITBOXProxy do
+            e.HRP[k] = v;
+        end;
+    end;
+end));
+
+Highlight.HandlePlayers();
+shared.ShushHighlight = Highlight;
+local Settings = shared.ShushHighlight.Settings;
+
+Settings.HITBOX.Size = Vector3.new(5,5,5);
+Settings.HITBOX.Transparency = 0.5;
+Settings.TARGETHITBOX.Size = Vector3.new(15,15,15);
+Settings.TARGETHITBOX.Transparency = 0.5;
+
+Settings.INST.FillColor = Color3.fromRGB(222, 2, 222);
+Settings.TARGET.OutlineColor = Color3.fromRGB(111, 11, 111);
+--Tween
+function GetTime(Distance, Speed)
+    local Time = Distance / Speed
+    return Time
 end
+
+function oreoTween(targetpart,oreospeed)
+    local Speed = oreospeed  local Distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - targetpart.Position).magnitude local Time = GetTime(Distance, Speed) local TweenService = game:GetService("TweenService") local oreottable = TweenInfo.new( Time, Enum.EasingStyle.Linear, Enum.EasingDirection.Out,  0, false, 0 ) local Tween = TweenService:Create(game.Players.LocalPlayer.Character.HumanoidRootPart,oreottable,{CFrame = targetpart.CFrame}) Tween:Play()
+end 
+
+spawn(function()
+    while wait() do
+        pcall(function()
+            if game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.Visible == true then
+                game.Workspace.Gravity = 0
+                oreoTween(game.Workspace[game.Players.LocalPlayer.PlayerGui.ScreenGui:WaitForChild("UI"):WaitForChild("Target"):WaitForChild("TargetText").Text].HumanoidRootPart,30)
+elseif game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.Visible == false then
+    game.Workspace.Gravity = 196.2
+end
+end)
+end
+end)
+--Stab aura
+  local Player = game:GetService("Players").LocalPlayer
+local wS = game:GetService("Workspace")
+
+local ClosestPlayer = function()
+    local Closest = nil
+    local Distance = 9e9
+    for i, v in next, game:GetService("Players"):GetPlayers() do
+        if v.Name ~= Player.Name then
+            if wS[v.Name] and wS[v.Name]:FindFirstChild("Humanoid") and wS[v.Name]:FindFirstChild("Humanoid").Health ~= 0 then
+                local Magnitude = (Player.Character.Head.Position - wS[v.Name].Head.Position).Magnitude
+                if Magnitude < Distance then
+                    Closest = wS[v.Name]
+                    Distance = Magnitude
+                    end
+                end
+            end
+        end
+    return Closest
+end
+spawn(function()
+        while wait() do
+            repeat wait() until Player.Character:FindFirstChild("Head")
+            if Player:DistanceFromCharacter(ClosestPlayer().Head.Position) <= 1000000.5 then
+                Player.PlayerScripts.localknifehandler.HitCheck:Fire(ClosestPlayer())
+                wait(.7)
+            else
+                wait()
+            end
+    end
 end)
 
 spawn(function()
@@ -151,7 +549,7 @@ spawn(function()
                     if v.Name == game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.TargetText.Text then
                         if v.Name ~= game.Players.LocalPlayer.Name then
                             game.Players.LocalPlayer.Character.Humanoid:EquipTool(Game.Players.LocalPlayer.Backpack.Knife)
-                            wait(.3)
+                            wait(2)
                             local Target = game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.TargetText.Text
                             local x = game.Workspace[Target].HumanoidRootPart.Position.X + randompart()
                             local y = game.Workspace[Target].HumanoidRootPart.Position.Y + randompart()
@@ -159,7 +557,7 @@ spawn(function()
                             local args = {
                                 [1] = Vector3.new(x, y, z),
                                 [2] = 0,
-                                [3] = CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+                                [3] = CFrame.new(0, 0, 0, math.huge, 0, 0, 0, math.huge, 0, 0, 0, math.huge)
                             }
                             game:GetService("ReplicatedStorage").Remotes.ThrowKnife:FireServer(unpack(args))
                             wait(.1)
@@ -172,144 +570,48 @@ spawn(function()
         end)
     end
 end)
+--Noclip
+local function DoIt2(yeah)
+    pcall(function()
+        yeah.CanQuery = true;
+        local o = yeah.CanCollide;
+        yeah.Touched:Connect(function(a)
+            pcall(function()
+                yeah.CanCollide = false;
+                wait(1);
+                yeah.CanCollide = o;
+            end);
+        end);
+    end);
+end;
+
+local function DoIt(stuffs)
+    for i,v in next, stuffs do
+        DoIt2(v);
+    end;
+end;
+
+workspace.DescendantAdded:Connect(function(c)
+    if workspace:FindFirstChild("GameMap") and c:IsDescendantOf(workspace.GameMap) then
+        if game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.Visible == true then
+        DoIt2(c);
+        end;
+end;
+end);
+if workspace:FindFirstChild("GameMap") then
+    if game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.Visible == true then
+    DoIt(workspace.GameMap:GetDescendants());
+end;
+end;
 
 spawn(function()
-    game:GetService('RunService').RenderStepped:connect(function()
-for i,v in pairs(game:GetService('Players'):GetPlayers()) do
-    if v.Name ~= game.Players.LocalPlayer.Name then
-game.Workspace[v.Name].HumanoidRootPart.Size = Vector3.new(8,8,8)
-game.Workspace[v.Name].HumanoidRootPart.Transparency = 1
-game.Workspace[v.Name].HumanoidRootPart.BrickColor = BrickColor.new("Really red")
-game.Workspace[v.Name].HumanoidRootPart.Material = "Neon"
-game.Workspace[v.Name].HumanoidRootPart.CanCollide = false
-wait()
-end
-end
-end)
-end)
-
- -- Made by JackMcJagger15
-
-power = 300 -- change this to make it more or less powerful
-
-game:GetService('RunService').Stepped:connect(function()
-game.Players.LocalPlayer.Character.Head.CanCollide = false
-game.Players.LocalPlayer.Character.Torso.CanCollide = false
-game.Players.LocalPlayer.Character["Left Leg"].CanCollide = false
-game.Players.LocalPlayer.Character["Right Leg"].CanCollide = false
-end)
-
-wait(.1)
-local bambam = Instance.new("BodyThrust")
-bambam.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
-bambam.Force = Vector3.new(power,0,power)
-bambam.Location = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
-
-spawn(function()
-    while wait(300) do
+    while wait() do
         pcall(function()
-            game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
-        end)
-end
-end)
-end)
-    
-local FirstPage = MainUI.AddPage("LocalPlayer")
-
-local FirstLabel = FirstPage.AddLabel("GodMode")
-local FirstButton = FirstPage.AddButton("Auto GodMode", function()
-spawn(function()
-    while wait(1) do
-        pcall(function()
-            if game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.SpectateBar.ButtonBar.GhostB.Visible == true then
-                wait(.5)
-                for i,v in pairs(getconnections(game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.SpectateBar.ButtonBar.GhostB.MouseButton1Click)) do
-                    v:Fire()
-                end
-            end
+           if workspace:FindFirstChild("GameMap") then
+                   if game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.UI.Target.Visible == true then
+              game.Workspace.GameMap:Destroy() 
+                   end
+          end
         end)
     end
-end)
-
-spawn(function()
-    while wait(.5) do
-        pcall(function()
-            for _,v in pairs(game:GetService("Workspace").GhostCoins:GetDescendants()) do
-                if v:IsA("TouchTransmitter") then
-                    firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 0) --0 is touch
-                    wait(.5)
-                    firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 1) -- 1 is untouch
-                end
-            end
-        end)
-    end
-end)
-end)
-local FirstLabel = FirstPage.AddLabel("Noclip")
-local FirstToggle = FirstPage.AddToggle("        Noclip", false, function(Value)
-    if Value == true then
-getgenv().NoclipS = true
-else
-    if Value == false then
-        getgenv().NoclipS = false
-    end
-    end
-    end)
-
-local FirstLabel = FirstPage.AddLabel("WalkSpeed/JumpPower/Gravity")
-local FirstSlider = FirstPage.AddSlider("WalkSpeed", {Min = 0, Max = 255, Def = 16}, function(Value)
-game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-end)
-local FirstSlider = FirstPage.AddSlider("JumpPower", {Min = 0, Max = 255, Def = 50}, function(Value)
-game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-end)
-local FirstSlider = FirstPage.AddSlider("Gravity", {Min = 1000, Max = 0, Def = 196.2}, function(Value)
-game.Workspace.Gravity = Value
-end)
-local FirstPage = MainUI.AddPage("HBE")
-local FirstToggle = FirstPage.AddToggle("Turn HBE ON/OFF", false, function(Value)
-if Value == true then
-    getgenv().CantSeeMEEE = 0.5
-    getgenv().Age = Vector3.new(5,5,5)
-    print("ON")
-    else
-        if Value == false then
-            getgenv().CantSeeMEEE = 1
-            getgenv().Age = Vector3.new(2,2,1)
-            print("OFF")
-        end
-        end
-end)
-local FirstSlider = FirstPage.AddSlider("HBE Size", {Min = 0, Max = 100, Def = 5}, function(Value)
-getgenv().Age = Vector3.new(Value,Value,Value)
-end)
-local FirstPicker = FirstPage.AddColourPicker("HBE Colour", "white", function(Value)
-getgenv().SussyBiis = Value
-print(SussyBiis)
-end)
-
-spawn(function()
-    game:GetService('RunService').RenderStepped:connect(function()
-for i,v in pairs(game:GetService('Players'):GetPlayers()) do
-    if v.Name ~= game.Players.LocalPlayer.Name then
-game.Workspace[v.Name].HumanoidRootPart.Size = Age
-game.Workspace[v.Name].HumanoidRootPart.Transparency = CantSeeMEEE
-game.Workspace[v.Name].HumanoidRootPart.Color = SussyBiis
-game.Workspace[v.Name].HumanoidRootPart.Material = "Neon"
-game.Workspace[v.Name].HumanoidRootPart.CanCollide = false
-wait()
-end
-end
-end)
-end)
-
-char = game.Players.LocalPlayer.Character 
-while true do 
-  if NoclipS == true then 
-    for _,v in pairs(char:children()) do 
-      pcall(function() if v.className == "Part" then v.CanCollide = false elseif v.ClassName == "Model" then
-         v.Head.CanCollide = false end end) 
-    end 
-  end 
-game:service("RunService").Stepped:wait() 
-end
+    end) end);
