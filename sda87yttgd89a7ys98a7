@@ -522,7 +522,7 @@ end
 spawn(function()
         while wait() do
             repeat wait() until Player.Character:FindFirstChild("Head")
-            if Player:DistanceFromCharacter(ClosestPlayer().Head.Position) <= 1000000.5 then
+            if Player:DistanceFromCharacter(ClosestPlayer().Head.Position) <= 6 then
                 Player.PlayerScripts.localknifehandler.HitCheck:Fire(ClosestPlayer())
                 wait(.7)
             else
