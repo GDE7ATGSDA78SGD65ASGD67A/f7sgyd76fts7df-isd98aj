@@ -1,109 +1,90 @@
-local old = getrenv().gcinfo
-getrenv().gcinfo = function(...)
-    return wait(9e9)
-end
+--return if the anticheat already ran
+if shared.AnticheatBypass1Success then return;end;
+--get the B.A.C script
+local BAC = (function()
+    for I, Script in next, game:GetDescendants() do
+        if typeof(Script) == "Instance" and Script.ClassName == "LocalScript" then
+            if Script.Name:match("B%.A%.C") then
+                return Script;
+            end;
+        end;
+    end;
+end)();
 
-local CoreGui = game.CoreGui
-local ContentProvider = game.ContentProvider
-local RobloxGuis = {"RobloxGui", "TeleportGui", "RobloxPromptGui", "RobloxLoadingGui", "PlayerList", "RobloxNetworkPauseNotification", "PurchasePrompt", "HeadsetDisconnectedDialog", "ThemeProvider", "DevConsoleMaster"}
+--get garbage collection
+local Collection = getgc(false);
 
-local function FilterTable(tbl)
-    local context = syn_context_get()
-    syn_context_set(7)
-    local new = {}
-    for i,v in ipairs(tbl) do --roblox iterates the array part
-        if typeof(v) ~= "Instance" then
-            table.insert(new, v)
-        else
-            if v == CoreGui or v == game then
-                --insert only the default roblox guis
-                for i,v in pairs(RobloxGuis) do
-                    local gui = CoreGui:FindFirstChild(v)
-                    if gui then
-                        table.insert(new, gui)
-                    end
-                end
+local DONE = false;
 
-                if v == game then
-                    for i,v in pairs(game:GetChildren()) do
-                        if v ~= CoreGui then
-                            table.insert(new, v)
-                        end
-                    end
-                end
-            else
-                if not CoreGui:IsAncestorOf(v) then
-                    table.insert(new, v)
-                else
-                    --don't insert it if it's a descendant of a different gui than default roblox guis
-                    for j,k in pairs(RobloxGuis) do
-                        local gui = CoreGui:FindFirstChild(k)
-                        if gui then
-                            if v == gui or gui:IsAncestorOf(v) then
-                                table.insert(new, v)
-                                break
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    syn_context_set(context)
-    return new
-end
+(function()
 
-local old
-old = hookfunc(ContentProvider.PreloadAsync, function(self, tbl, cb)
-    if self ~= ContentProvider or type(tbl) ~= "table" or type(cb) ~= "function" then --note: callback can be nil but in that case it's useless anyways
-        return old(self, tbl, cb)
-    end
+    local BAC_Collection = {};
 
-    --check for any errors that I might've missed (such as table being {[2] = "something"} which causes "Unable to cast to Array")
-    local err
-    task.spawn(function() --TIL pcalling a C yield function inside a C yield function is a bad idea ("cannot resume non-suspended coroutine")
-        local s,e = pcall(old, self, tbl)
-        if not s and e then
-            err = e
-        end
-    end)
-   
-    if err then
-        return old(self, tbl) --don't pass the callback, just in case
-    end
+    for _, Func in next, Collection do
+        --loop through garbage collection
+        pcall(coroutine.wrap(function()
+            --if the current item isn't a function, return
+            if type(Func) ~= "function" then return end;
+            --if the current item isn't a lua function, return (if it is a C function)
+            if not islclosure(Func) then return end;
+            
+            --this is a workaround to getfenv(Func).script, which triggers the game's anticheat(god knows how)
+            local env = getfenv(Func);
+            local scr;
+            if type(env) == "table" then
+                for i,v in next, env do
+                    if type(i) == "string" and i == "script" then
+                        scr = v;
+                        break;
+                    end;
+                end;
+            end;
+            
+            --if there is no script or script has no parent, return
+            if not scr or not scr.Parent then return end;
+            
+            --if the script is B.A.C, insert it into BAC_Collection
+            if scr == BAC then
+                table.insert(BAC_Collection, Func);
+            end;
+        end));
 
-    tbl = FilterTable(tbl)
-    return old(self, tbl, cb)
-end)
+    end;
+    --BAC_Collection now contains every Lua function in the B.A.C script
 
-local old
-old = hookmetamethod(game, "__namecall", function(self, ...)
-    local method = getnamecallmethod()
-    if self == ContentProvider and (method == "PreloadAsync" or method == "preloadAsync") then
-        local args = {...}
-        if type(args[1]) ~= "table" or type(args[2]) ~= "function" then
-            return old(self, ...)
-        end
+    --get the IsValid function. we could also do (if getinfo(Func).name == "IsValid")
+    local IsValid;
+    for _, Func in next, BAC_Collection do
+        if (table.find(debug.getconstants(Func), "rbxassetid://")) then
+            IsValid = Func;
+            break;
+        end;
+    end;
 
-        local err
-        task.spawn(function()
-            setnamecallmethod(method) --different thread, different namecall method
-            local s,e = pcall(old, self, args[1])
-            if not s and e then
-                err = e
-            end
-        end)
+    --loop through BAC_Collection to find the function which has IsValid in it's upvalues
+    for _, Func in next, BAC_Collection do
+        local index = (table.find(debug.getupvalues(Func), IsValid));
+        if index then
+            --if this function has IsValid in it's upvalues, set that upvalue to a custom function
+            setupvalue(Func, index, function(...)
+                local Args = {...};
+                --this checks if the ID the game is validating follows rbxassetid://(NUMBERS)
+                --most ids that will kick you follow this format, so we will set it to a font so the game thinks it is a valid ID
+                if Args[1]:match("rbxassetid://([%d]+)") then
+                    Args[1] = "rbxasset://fonts/ariel.ttf";
+                end;
+                --call the function with the new args (if modified), and return the result
+                return IsValid(table.unpack(Args));
+            end);
+            --setting DONE to true will stop the loop and AnticheatBypass1Success will make sure that this script is only ran once
+            DONE = true;
+            shared.AnticheatBypass1Success = true;
+            return;
+        end;
+    end;
 
-        if err then
-            return old(self, args[1])
-        end
-
-        args[1] = FilterTable(args[1])
-        setnamecallmethod(method)
-        return old(self, args[1], args[2])
-    end
-    return old(self, ...)
-end)
+end)();
+print("Bypassed")
 
 local baseHitboxSize = Vector3.new(2, 2, 1);
 local baseTransparency = 1;
