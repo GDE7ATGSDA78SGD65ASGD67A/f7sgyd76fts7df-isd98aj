@@ -101,21 +101,6 @@ local oldGameIndex; oldGameIndex = hookmetamethod(game, "__index", newcclosure(f
 
     return oldGameIndex(...);
 end));
-local script = game:GetService'Players'.LocalPlayer.PlayerScripts.reeeee;
-local tablefind = table.find;
-local gc = getgc();
-for I, Function in next, gc do
-    if type(Function) == 'function' and islclosure(Function) and getfenv(Function).script == script then
-        local constants = getconstants(Function);
-        if tablefind(constants, 'Health') then
-            local BodyMoverIndex = tablefind(constants, 'BodyMover');
-            if BodyMoverIndex then
-                setconstant(Function, BodyMoverIndex, 'game');
-                break;
-            end;
-        end;
-    end;
-end;
 getfenv().AutoFarm = true
 if AutoFarm == true then
  
